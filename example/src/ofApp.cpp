@@ -9,7 +9,7 @@ void ofApp::setup()
 
 	shadow.setup();
 	shadow.setColors(ofColor(0,0,0));
-	shadow.setAlpha(255);
+	shadow.setAlpha(1.f);
 
 	model.loadModel("model.dae",true);
 	gui.setup();
@@ -43,7 +43,7 @@ void ofApp::render(bool color)
 	if(color) ofSetColor(ofColor::green);
 	ofDrawCone(-200, -80, -30, 50, 120);
 	if(color) ofSetColor(ofColor::grey);
-	ofDrawCylinder(-100, -70, 130, 50, 180);
+	ofDrawCylinder(-100, -100, 130, 50, 180);
 	ofPopMatrix();
 }
 
@@ -54,25 +54,31 @@ void ofApp::draw()
 	
 	ofEnableLighting();
 
+	//light
 	ofSetColor(pointLight.getDiffuseColor());
 	ofDrawSphere(pointLight.getPosition(), 20.f);
 
+	//scene
 	pointLight.enable();
 	material.begin();
 	render(true);
-	material.end();
-	pointLight.disable();
-	ofDisableLighting();
 
-	shadow.begin(cam);
-		render(false);
-	shadow.end();
-
+	//plane
 	ofPushMatrix();
 	ofRotateX(90);	
 	ofSetColor(0,0,200);
 	ofDrawPlane(0,0,-1,1500,1500);
 	ofPopMatrix();
+
+	material.end();
+	pointLight.disable();
+	ofDisableLighting();
+
+	//shadow
+	shadow.begin(cam);
+		render(false);
+	shadow.end();
+
 	
 	cam.end();
 	ofDisableDepthTest();
