@@ -7,10 +7,14 @@ void ofApp::setup()
 	pointLight.setSpecularColor( ofColor(255.f, 255.f, 255.f));
 	material.setShininess( 64 );
 
+	shadow.setup();
+	shadow.setColors(ofColor(0,0,0));
+	shadow.setAlpha(255);
+
 	model.loadModel("model.dae",true);
 	gui.setup();
 	gui.add(dir.set("direction light",
-	    ofVec3f(1,2,2),
+	    ofVec3f(1,-2,2),
 	    ofVec3f(-10),
 	    ofVec3f(10)
 	));
@@ -21,6 +25,12 @@ void ofApp::update()
 {
 	ofSetWindowTitle(ofToString(ofGetFrameRate()));
 	shadow.setDirLight(dir);
+	
+	pointLight.setPosition(
+		ofMap(dir->x,0,10,0,1000),
+		ofMap(dir->y,0,10,0,1000),
+		ofMap(dir->z,0,10,0,1000)
+	);
 }
 
 void ofApp::render(bool color)
@@ -43,6 +53,10 @@ void ofApp::draw()
 	cam.begin();
 	
 	ofEnableLighting();
+
+	ofSetColor(pointLight.getDiffuseColor());
+	ofDrawSphere(pointLight.getPosition(), 20.f);
+
 	pointLight.enable();
 	material.begin();
 	render(true);
@@ -50,8 +64,8 @@ void ofApp::draw()
 	pointLight.disable();
 	ofDisableLighting();
 
-	shadow.begin();
-	render(false);
+	shadow.begin(cam);
+		render(false);
 	shadow.end();
 
 	ofPushMatrix();

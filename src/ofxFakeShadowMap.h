@@ -1,14 +1,38 @@
 #include "ofMain.h"
 
+#define STR(A) #A
+
 class ofxFakeShadowMap{
 	public:
-		float alpha;
+		ofColor colors;
 		ofVec3f lightDir;
+		ofShader shader;
+		float alpha;
 
 		void setup()
 		{
-			alpha = 155;
+			alpha  = 0.2;
+			colors = ofColor(15);
 			lightDir = ofVec3f(1,2,2);
+			string vertex = STR(
+				void main() {  
+				    gl_Position = ftransform();
+				}
+			);
+			string fragment = STR(
+				uniform float alpha;
+				uniform vec3 colors;
+				void main() {
+				    gl_FragColor = vec4(colors,alpha);
+				}
+			);
+			shader.setupShaderFromSource(GL_VERTEX_SHADER,  vertex);
+			shader.setupShaderFromSource(GL_FRAGMENT_SHADER,fragment);
+			if(ofIsGLProgrammableRenderer())
+			{
+				shader.bindDefaults();
+			}
+			shader.linkProgram();
 		}
 
 		void setDirLight(ofVec3f _ld)
@@ -16,28 +40,38 @@ class ofxFakeShadowMap{
 			lightDir = _ld;
 		}
 
-		void setAlpha(float _a)
+		void setColors(ofColor _c)
 		{
+			colors = _c;
+		}
+
+		void setAlpha(float _a)
+                {
 			alpha = _a;
 		}
 
-		void begin()
+		void begin(ofCamera cam)
 		{
-			ofPushStyle();
                         ofVec3f lightRay = lightDir;
 			if(lightRay.y == 0) lightRay.y = 1e-5;
 			lightRay = -lightRay / lightRay.y;
 
-                        //glDepthMask(0);
+			ofPushStyle();
                         ofPushMatrix();
-                        ofMatrix4x4 mat(1,0,0,0, (float)lightRay[0],0,(float)lightRay[2],0, 0,0,1,0, 0,0.01f,0,1);
-			ofGetCurrentRenderer()->multMatrix(mat);
-			ofSetColor(0,0,0);
+			ofGetCurrentRenderer()->multMatrix(ofMatrix4x4(1,0,0,0, (float)lightRay.x,0,(float)lightRay.z,0, 0,0,1,0, 0,0.01f,0,1));
+
+			shader.begin();
+			shader.setUniform1f("alpha",alpha);
+			shader.setUniform3f("colors",
+					     ofMap(colors.r,0,255,0.,1.),
+					     ofMap(colors.g,0,255,0.,1.),
+					     ofMap(colors.b,0,255,0.,1.));
                 }
 
                 void end(){
+			shader.end();
+
                         ofPopMatrix();
 			ofPopStyle();
-                        //glDepthMask(1);
                 }
 };
